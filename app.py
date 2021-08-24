@@ -1,5 +1,3 @@
-import time
-
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -7,10 +5,10 @@ import dash_html_components as html
 import dash_table
 import numpy as np
 import plotly.graph_objects as go
-from dash.dependencies import Input, Output, State
-from sendemail import send_mail
+from dash.dependencies import Input, Output
 
 from coincap import *
+from sendemail import send_mail
 
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY], )
 
@@ -32,10 +30,10 @@ navbar = dbc.Navbar(id='navbar', children=[
 
         ], align="center",
             no_gutters=True),
-        href='https://github.com/zaqxsw800402/covid19-dash-plotly'
+        href='https://github.com/zaqxsw800402/coincap_dash'
     ),
     dbc.Button(id='button', children="Say Hi!", color="primary", className='ml-auto',
-               href='https://github.com/zaqxsw800402/covid19-dash-plotly')
+               href='https://github.com/zaqxsw800402/coincap_dash')
 
 ])
 
@@ -134,12 +132,9 @@ body_app = dbc.Container([
         ),
         dbc.Col(
             html.Div(id='check-div',
-                     # style={'display': 'none'}
+                     style={'display': 'none'}
                      )),
-        dbc.Col(
-            html.Div(id='hidden-div',
-                     # style={'display': 'none'}
-                     )),
+
     ]),
 
     html.Br(),
@@ -153,52 +148,19 @@ body_app = dbc.Container([
 
 app.layout = html.Div(id='parent', children=[navbar, body_app])
 
+
 @app.callback(Output('check-div', 'children'),
               [Input('coin-buy', 'value'),
                Input('coin-money', 'value')],
               )
 def check(coin, money, ):
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-
     money = int(money)
     if coin != 'All' and money > 0:
         df = select_coins(coin)
         df_price = df['priceUsd'][0]
         if df_price < money:
+            send_mail(coin)
             return f'buy {coin}'
-
-# @app.callback(Output('check-div', 'children'),
-#               Input('generate', 'n_clicks'),
-#               [State('coin-buy', 'value'),
-#                State('coin-money', 'value')],
-#               )
-# def check(click, coin, money, ):
-#     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-#
-#     # if 'generate' not in changed_id:
-#     #     return 'not yet'
-#     money = int(money)
-#     if click > 0:
-#         if coin != 'All' and int(money) > 0:
-#             df = select_coins(coin)
-#             df_price = df['priceUsd'][0]
-#             if df_price < money:
-#                 return f'buy {coin}'
-
-
-# @app.callback(Output('hidden-div', 'children'),
-#               [Input('check-div', 'children'),
-#                Input('coin-money', 'value')])
-# def check_send_email(check_coin, money):
-#     global send_mail_time
-#     if check_coin != 'not yet':
-#         check, coin = check_coin.split(' ')
-#         df = select_coins(coin)
-#         df_price = df['priceUsd'][0]
-#         if check == 'buy' and df_price > int(money):
-#             # send_mail_time = send_mail('coin', send_mail_time)
-#             return 'buy it'
-#     return None
 
 
 @app.callback([Output(component_id='coin-table-output', component_property='children'),
